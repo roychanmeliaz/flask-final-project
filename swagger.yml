@@ -278,7 +278,38 @@ paths:
         200:
           description: Successfully deleted a director
 
-
+  /directors/countMovies:
+    get:
+      operationId: directors.count
+      tags:
+        - Directors
+      summary: Read the entire set of directors, with movies count and sorted by movies count descending
+      description: Read the entire set of directors, with movies count and sorted by movies count descending
+      responses:
+        200:
+          description: Successfully read directors set operation
+          schema:
+            type: array
+            items:
+              properties:
+                name:
+                  type: string
+                  description: Name of the director
+                id:
+                  type: integer
+                  description: Id of the director
+                gender:
+                  type: integer
+                  description: Gender of the director
+                uid:
+                  type: integer
+                  description: UID of the director
+                department:
+                  type: string
+                  description: Department of the director
+                count:
+                  type: integer
+                  description: Movie count director has produced
 
 # end directors ======================================================
 
@@ -290,6 +321,84 @@ paths:
         - Movies
       summary: Read the entire set of movies for all directors, sorted by timestamp
       description: Read the entire set of movies for all directors, sorted by timestamp
+      responses:
+        200:
+          description: Successfully read movies for all directors operation
+          schema:
+            type: array
+            items:
+              properties:
+                director_id:
+                  type: integer
+                  description: Id of director this movie is associated with
+                id:
+                  type: integer
+                  description: Id of this movie
+                original_title:
+                  type: string
+                  description: Original title of this movie
+                budget:
+                  type: integer
+                  description: Budget of this movie
+                popularity:
+                  type: integer
+                  description: Popularity of this movie
+                release_date:
+                  type: string
+                  description: Release date of this movie
+                revenue:
+                  type: integer
+                  description: Revenue of this movie
+                title:
+                  type: string
+                  description: Title of this movie
+                vote_average:
+                  type: number
+                  description: Average vote of this movie
+                vote_count:
+                  type: integer
+                  description: Number of vote of this movie
+                overview:
+                  type: string
+                  description: Overview of this movie
+                tagline:
+                  type: string
+                  description: Tagline of this movie
+                uid:
+                  type: integer
+                  description: Uid of this movie
+                director:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: Name of the director
+                    id:
+                      type: integer
+                      description: Id of the director
+                    gender:
+                      type: integer
+                      description: Gender of the director
+                    uid:
+                      type: integer
+                      description: UID of the director
+                    department:
+                      type: string
+                      description: Department of the director
+
+  /movies/budgetFilter/{budget}:
+    get:
+      operationId: movies.budgetFilter
+      tags:
+        - Movies
+      summary: Read the entire set of movies for all directors, filtered with minimum budget and sorted by budget ascending
+      description: Read the entire set of movies for all directors, filtered with minimum budget and sorted by budget ascending
+      parameters:
+        - name: budget
+          in: path
+          description: Minimum budget of the movie
+          type: integer
+          required: True
       responses:
         200:
           description: Successfully read movies for all directors operation

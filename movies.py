@@ -61,12 +61,33 @@ def create(director_id, movie):
     :param movie:            The JSON containing the movie data
     :return:                201 on success
     """
+
+    uid = movie.get("uid")
+    title = movie.get("title")
+
+    # validators
+    if not((uid or uid==0) and title):
+        return "",400
+
+    existing_movie = (
+        Movies.query.filter(Movies.uid == uid)
+        .one_or_none()
+    )
+
     # get the parent director
     director = Directors.query.filter(Directors.id == director_id).one_or_none()
 
     # Was a director found?
     if director is None:
         abort(404, f"Director not found for Id: {director_id}")
+
+    if existing_movie:
+        abort(
+            409,
+            "Movie id {uid} exists already".format(
+                uid=uid
+            ),
+        )
 
     # Create a movie schema instance
     schema = MoviesSchema()
@@ -92,6 +113,14 @@ def update(director_id, movie_id, movie):
     :param movie:            The JSON containing the note data
     :return:                200 on success
     """
+
+    uid = movie.get("uid")
+    title = movie.get("title")
+
+    # validators
+    if not((uid or uid==0) and title):
+        return "",400
+
     update_movie = (
         Movies.query.filter(Directors.id == director_id)
         .filter(Movies.id == movie_id)
@@ -149,3 +178,18 @@ def delete(director_id, movie_id):
     # Otherwise, nope, didn't find that note
     else:
         abort(404, f"Movie not found for Id: {movie_id}")
+
+def budgetFilter(budget):
+    """
+    This function responds to a request for /api/people/movies
+    with the complete list of movies, sorted by note timestamp
+
+    :return:                json list of all movies for all people
+    """
+    # Query the database for all the movies
+    movies = Movies.query.order_by(db.asc(Movies.budget)).filter(Movies.budget>=budget).limit(100).all()
+
+    # Serialize the list of movies from our data
+    movies_schema = MoviesSchema(many=True)
+    data = movies_schema.dump(movies)
+    return data

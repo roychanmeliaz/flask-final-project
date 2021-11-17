@@ -65,11 +65,13 @@ def create(director):
     uid = director.get("uid")
     department = director.get("department")
 
+    # validators
+    if not(name and (gender or gender==0) and (uid or uid==0) and department):
+        return "",400
+
     existing_person = (
-        Directors.query.filter(Directors.name == name)
-        .filter(Directors.gender == gender)
+        Directors.query
         .filter(Directors.uid == uid)
-        .filter(Directors.department == department)
         .one_or_none()
     )
 
@@ -93,8 +95,8 @@ def create(director):
     else:
         abort(
             409,
-            "Director {name} exists already".format(
-                name=name
+            "Director uid {uid} exists already".format(
+                uid=uid
             ),
         )
 
@@ -107,6 +109,16 @@ def update(id, director):
     :param director:      director to update
     :return:            updated director structure
     """
+
+    name = director.get("name")
+    gender = director.get("gender")
+    uid = director.get("uid")
+    department = director.get("department")
+
+    # validators
+    if not(name and (gender or gender==0) and (uid or uid==0) and department):
+        return "",400
+
     # Get the director requested from the db into session
     update_person = Directors.query.filter(
         Directors.id == id
@@ -157,105 +169,20 @@ def delete(id):
         abort(404, f"Director not found for Id: {id}")
 
 
+def count():
+    """
+    This function responds to a request for /api/director/countMovies
+    with the complete lists of director
+    :return:        json string of list of director with count and movies
+                    removed sorted by highest count
+    """
+    # Create the list of directors from our data
+    directors = Directors.query.order_by(Directors.id).all()
 
-
-
-
-
-
-
-
-
-
-
-
-#  OLD
-
-# def update(person_id, person):
-#     """
-#     This function updates an existing person in the people structure
-#     Throws an error if a person with the name we want to update to
-#     already exists in the database.
-#     :param person_id:   Id of the person to update in the people structure
-#     :param person:      person to update
-#     :return:            updated person structure
-#     """
-#     # Get the person requested from the db into session
-#     update_person = Person.query.filter(
-#         Person.person_id == person_id
-#     ).one_or_none()
-
-#     # Try to find an existing person with the same name as the update
-#     fname = person.get("fname")
-#     lname = person.get("lname")
-
-#     existing_person = (
-#         Person.query.filter(Person.fname == fname)
-#         .filter(Person.lname == lname)
-#         .one_or_none()
-#     )
-
-#     # Are we trying to find a person that does not exist?
-#     if update_person is None:
-#         abort(
-#             404,
-#             "Person not found for Id: {person_id}".format(person_id=person_id),
-#         )
-
-#     # Would our update create a duplicate of another person already existing?
-#     elif (
-#         existing_person is not None and existing_person.person_id != person_id
-#     ):
-#         abort(
-#             409,
-#             "Person {fname} {lname} exists already".format(
-#                 fname=fname, lname=lname
-#             ),
-#         )
-
-#     # Otherwise go ahead and update!
-#     else:
-
-#         # turn the passed in person into a db object
-#         schema = PersonSchema()
-#         update = schema.load(person, session=db.session)
-
-#         # Set the id to the person we want to update
-#         update.person_id = update_person.person_id
-
-#         # merge the new object into the old and commit it to the db
-#         db.session.merge(update)
-#         db.session.commit()
-
-#         # return updated person in the response
-#         data = schema.dump(update_person)
-
-#         return data, 200
-
-
-# def delete(person_id):
-#     """
-#     This function deletes a person from the people structure
-#     :param person_id:   Id of the person to delete
-#     :return:            200 on successful delete, 404 if not found
-#     """
-#     # Get the person requested
-#     person = Person.query.filter(Person.person_id == person_id).one_or_none()
-
-#     # Did we find a person?
-#     if person is not None:
-#         db.session.delete(person)
-#         db.session.commit()
-#         return make_response(
-#             "Person {person_id} deleted".format(person_id=person_id), 200
-#         )
-
-#     # Otherwise, nope, didn't find that person
-#     else:
-#         abort(
-#             404,
-#             "Person not found for Id: {person_id}".format(person_id=person_id),
-#         )
-
-
-
+    # Serialize the data for the response
+    directors_schema = DirectorsSchema(many=True)
+    data = directors_schema.dump(directors)
+    for sub in data:
+        sub["count"]=len(sub["movies"])
+        del sub["movies"]
+    return sorted(data, key = lambda i: i['count'], reverse=True)
